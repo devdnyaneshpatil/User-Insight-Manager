@@ -32,7 +32,7 @@ const addPosts = async (req, res) => {
 const getPosts = async (req, res) => {
   const userId = req.params.userId;
   try {
-    const posts = await PostModel.findA({userId:userId});
+    const posts = await PostModel.find({userId:userId});
     let result = "";
     if (posts.length > 0) {
       result = "Download in Excel";
