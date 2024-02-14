@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Button, Card, Heading, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../subcomp/Navbar";
 
 function User() {
   const [users, setUsers] = useState([]);
@@ -25,7 +26,9 @@ function User() {
 
   const fetchUserData = async (userId) => {
     try {
-      const response = await fetch(`http://localhost:8080/users/${userId}`);
+      const response = await fetch(
+        `https://super-ruby-sari.cyclic.app/users/${userId}`
+      );
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -52,13 +55,16 @@ function User() {
 
     try {
       if (addEl.innerText === "Add") {
-        const response = await fetch("http://localhost:8080/users/add", {
-          method: "POST",
-          headers: {
-            "Content-type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+          "https://super-ruby-sari.cyclic.app/users/add",
+          {
+            method: "POST",
+            headers: {
+              "Content-type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -83,43 +89,59 @@ function User() {
   }, [users]);
 
   return (
-    <Box>
-      <Button colorScheme="facebook" w={"100%"} onClick={fetchUsers}>
-        All Users
-      </Button>
-      {users.length > 0 &&
-        users.map((user) => (
-          <Card
-            key={user.id}
-            className="card"
-            data-id={user.id}
-            data-email={user.email}
-            data-name={user.name}
-            data-phone={user.phone}
-            data-website={user.website}
-            data-city={user.address.city}
-            data-company={user.company.name}
-          >
-            <Heading className="name">{user.name}</Heading>
-            <Heading className="email">{user.email}</Heading>
-            <Text className="phone">{user.phone}</Text>
-            <Text className="web">{user.website}</Text>
-            <Text className="city">{user.address.city}</Text>
-            <Text className="company">{user.company.name}</Text>
-            <Button
-              data-name={user.name}
+    <>
+      <Navbar />
+      <Box
+        w={"80%"}
+        margin={"auto"}
+        display={"grid"}
+        gridTemplateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }}
+        gap={20}
+        mt={"20px"}
+      >
+        {users.length === 0 && (
+          <Button colorScheme="facebook" w={"100%"} onClick={fetchUsers}>
+            All Users
+          </Button>
+        )}
+        {users.length > 0 &&
+          users.map((user) => (
+            <Card
+              key={user.id}
+              className="card"
+              data-id={user.id}
               data-email={user.email}
+              data-name={user.name}
               data-phone={user.phone}
               data-website={user.website}
               data-city={user.address.city}
               data-company={user.company.name}
-              onClick={(e) => handleButtonClick(user.id, e.target)}
+              boxShadow="0px 4px 6px rgba(0, 0, 0, 0.1)"
+              border={"1px solid grey"}
+              p={"10px"}
             >
-              {buttonTexts[user.id]}
-            </Button>
-          </Card>
-        ))}
-    </Box>
+              <Heading className="name">{user.name}</Heading>
+              <Heading className="email">Email:-{user.email}</Heading>
+              <Text className="phone">PHONE:-{user.phone}</Text>
+              <Text className="web">WEBSITE:-{user.website}</Text>
+              <Text className="city">ADDRESS:-{user.address.city}</Text>
+              <Text className="company">COMPANY:-{user.company.name}</Text>
+              <Button
+                colorScheme="twitter"
+                data-name={user.name}
+                data-email={user.email}
+                data-phone={user.phone}
+                data-website={user.website}
+                data-city={user.address.city}
+                data-company={user.company.name}
+                onClick={(e) => handleButtonClick(user.id, e.target)}
+              >
+                {buttonTexts[user.id]}
+              </Button>
+            </Card>
+          ))}
+      </Box>
+    </>
   );
 }
 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Button, Box, Heading, Text, Card } from "@chakra-ui/react";
+import Navbar from "../subcomp/Navbar";
 
 function Post() {
   const [buttonText, setButtonText] = useState("");
@@ -11,12 +13,14 @@ function Post() {
       const userId = urlParams.get("id");
 
       try {
-        const response = await fetch(`http://localhost:8080/posts/${userId}`);
+        const response = await fetch(
+          `https://super-ruby-sari.cyclic.app/posts/${userId}`
+        );
         const data = await response.json();
         setButtonText(data.msg);
 
         const userInfoResponse = await fetch(
-          `http://localhost:8080/users/${userId}`
+          `https://super-ruby-sari.cyclic.app/users/${userId}`
         );
         const userInfoData = await userInfoResponse.json();
         const user = {
@@ -53,7 +57,7 @@ function Post() {
         );
         const data = await response.json();
         const postResponse = await fetch(
-          `http://localhost:8080/posts/${company}`,
+          `https://super-ruby-sari.cyclic.app/posts/${company}`,
           {
             method: "POST",
             headers: {
@@ -69,7 +73,9 @@ function Post() {
       }
     } else if (buttonText === "Download in Excel") {
       try {
-        const response = await fetch(`http://localhost:8080/posts/${userId}`);
+        const response = await fetch(
+          `https://super-ruby-sari.cyclic.app/posts/${userId}`
+        );
         const data = await response.json();
         const csvData = generateCSV(data.posts);
         downloadCSV(csvData, "data.csv");
@@ -95,28 +101,40 @@ function Post() {
     document.body.removeChild(link);
   };
 
-  useEffect(() => {
-    displayPosts(posts);
-  }, [posts, userInfo]);
-
-  const displayPosts = (data) => {
-    return data.map((el) => (
-      <div key={el.id} data-id={el.id} data-company={userInfo.company}>
-        <h1>{userInfo.name}</h1>
-        <h3>{el.title}</h3>
-        <p>{el.body}</p>
-        <h4>{userInfo.company}</h4>
-      </div>
-    ));
-  };
-
   return (
-    <div>
-      <div id="button-container">
-        <button onClick={handleButtonClick}>{buttonText}</button>
-      </div>
-      <div id="user-container">{displayPosts(posts)}</div>
-    </div>
+    <>
+      <Navbar></Navbar>
+      <Box
+        w={"80%"}
+        margin={"auto"}
+        display={"grid"}
+        gridTemplateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }}
+        gap={20}
+        mt={"20px"}
+      >
+        <Box id="button-container" textAlign="center" mb={4}>
+          <Button colorScheme="teal" onClick={handleButtonClick}>
+            {buttonText}
+          </Button>
+        </Box>
+        <Box id="user-container">
+          {posts.map((el) => (
+            <Card key={el.id} data-id={el.id} data-company={userInfo.company} 
+            mb={"20px"}
+            bg="gray.200"
+            p={"50px"}
+            >
+              <Heading>USER:-{userInfo.name}</Heading>
+              <Heading as="h3" size="md">
+                TITLE:-{el.title}
+              </Heading>
+              <Text>BODY:-{el.body}</Text>
+              <Text>COMPANY:-{userInfo.company}</Text>
+            </Card>
+          ))}
+        </Box>
+      </Box>
+    </>
   );
 }
 
