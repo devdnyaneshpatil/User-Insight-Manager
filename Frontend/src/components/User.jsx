@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Card, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Card, Heading, Text, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../subcomp/Navbar";
 
@@ -7,20 +7,38 @@ function User() {
   const [users, setUsers] = useState([]);
   const [buttonTexts, setButtonTexts] = useState({});
   const navigate = useNavigate();
+  const toast = useToast();
+
+  useEffect(() => {
+    const storedUsers = localStorage.getItem("users");
+    if (storedUsers) {
+      setUsers(JSON.parse(storedUsers));
+    }
+  }, []);
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(
-        "https://jsonplaceholder.typicode.com/users"
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+      if (users.length === 0) {
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/users"
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setUsers(data);
+
+        localStorage.setItem("users", JSON.stringify(data));
       }
-      const data = await response.json();
-      setUsers(data);
-      setButtonTexts({});
     } catch (error) {
       console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -39,6 +57,13 @@ function User() {
       }));
     } catch (error) {
       console.error("Error fetching user data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch user data.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -73,18 +98,36 @@ function User() {
         addEl.classList.remove("Add");
         addEl.classList.add(data.msg);
       } else {
-        navigate(`/post?id=${payload.id}`);
+        navigate(
+          `/post?id=${payload.id}&userName=${payload.name}&company=${payload.company}`
+        );
       }
     } catch (error) {
       console.error("Error handling button click:", error);
+      toast({
+        title: "Error",
+        description: "Failed to handle button click.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
   useEffect(() => {
     if (users.length > 0) {
-      users.forEach((user) => {
-        fetchUserData(user.id);
-      });
+      Promise.all(users.map((user) => fetchUserData(user.id))).catch(
+        (error) => {
+          console.error("Error fetching user data:", error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch user data.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      );
     }
   }, [users]);
 
@@ -119,6 +162,8 @@ function User() {
               boxShadow="0px 4px 6px rgba(0, 0, 0, 0.1)"
               border={"1px solid grey"}
               p={"10px"}
+              transition="transform 0.3s ease-in-out"
+              _hover={{ transform: "scale(1.05)", cursor: "pointer" }}
             >
               <Heading className="name">{user.name}</Heading>
               <Heading className="email">Email:-{user.email}</Heading>

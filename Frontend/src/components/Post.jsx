@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { Button, Box, Heading, Text, Card } from "@chakra-ui/react";
+import {
+  Button,
+  Box,
+  Heading,
+  Text,
+  Card,
+  Wrap,
+  WrapItem,
+  Avatar,
+  useToast,
+} from "@chakra-ui/react";
 import Navbar from "../subcomp/Navbar";
 
 function Post() {
   const [buttonText, setButtonText] = useState("");
   const [posts, setPosts] = useState([]);
   const [userInfo, setUserInfo] = useState({ name: "", company: "" });
+  const [fetchedPosts, setFetchedPosts] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get("id");
+      const userName = urlParams.get("userName");
+      const company = urlParams.get("company");
 
       try {
         const response = await fetch(
@@ -19,39 +33,33 @@ function Post() {
         const data = await response.json();
         setButtonText(data.msg);
 
-        const userInfoResponse = await fetch(
-          `https://super-ruby-sari.cyclic.app/users/${userId}`
-        );
-        const userInfoData = await userInfoResponse.json();
         const user = {
-          name: userInfoData.user.name,
-          company: userInfoData.user.company,
+          name: userName,
+          company: company,
         };
         setUserInfo(user);
-        localStorage.setItem(
-          "company",
-          JSON.stringify({ companyName: user.company })
-        );
 
-        const postsResponse = await fetch(
-          `https://jsonplaceholder.typicode.com/posts?userId=${userId}`
-        );
-        const postsData = await postsResponse.json();
-        setPosts(postsData);
+        if (!fetchedPosts) {
+          const postsResponse = await fetch(
+            `https://jsonplaceholder.typicode.com/posts?userId=${userId}`
+          );
+          const postsData = await postsResponse.json();
+          setPosts(postsData);
+          setFetchedPosts(true);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     fetchData();
-  }, []);
+  }, [fetchedPosts]);
 
   const handleButtonClick = async () => {
-    const userId = new URLSearchParams(window.location.search).get("id");
-
     if (buttonText === "Bulk Add") {
+      const userId = new URLSearchParams(window.location.search).get("id");
       try {
-        const company = JSON.parse(localStorage.getItem("company")).companyName;
+        const company = userInfo.company;
         const response = await fetch(
           `https://jsonplaceholder.typicode.com/posts?userId=${userId}`
         );
@@ -68,17 +76,27 @@ function Post() {
         );
         const postData = await postResponse.json();
         setButtonText(postData.msg);
+        toast({
+          title: "Bulk Add",
+          description: "Posts are added",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
       } catch (error) {
         console.error("Error adding posts:", error);
       }
     } else if (buttonText === "Download in Excel") {
       try {
-        const response = await fetch(
-          `https://super-ruby-sari.cyclic.app/posts/${userId}`
-        );
-        const data = await response.json();
-        const csvData = generateCSV(data.posts);
+        const csvData = generateCSV(posts);
         downloadCSV(csvData, "data.csv");
+        toast({
+          title: "Download in Excel",
+          description: "Posts downloaded successfully!",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
       } catch (error) {
         console.error("Error downloading in Excel:", error);
       }
@@ -104,28 +122,44 @@ function Post() {
   return (
     <>
       <Navbar></Navbar>
-      <Box
-        w={"80%"}
-        margin={"auto"}
-        display={"grid"}
-        gridTemplateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }}
-        gap={20}
-        mt={"20px"}
-      >
+      <Box w={"80%"} margin={"auto"} mt={"20px"}>
         <Box id="button-container" textAlign="center" mb={4}>
           <Button colorScheme="teal" onClick={handleButtonClick}>
             {buttonText}
           </Button>
         </Box>
-        <Box id="user-container">
+        <Box
+          id="user-container"
+          display={"grid"}
+          gridTemplateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }}
+          gap={20}
+          mt={"50px"}
+        >
           {posts.map((el) => (
-            <Card key={el.id} data-id={el.id} data-company={userInfo.company} 
-            mb={"20px"}
-            bg="gray.200"
-            p={"50px"}
+            <Card
+              key={el.id}
+              data-id={el.id}
+              data-company={userInfo.company}
+              mb={"20px"}
+              bg="gray.200"
+              p={"50px"}
+              border=" 1px solid black"
+              transition="transform 0.3s ease-in-out"
+              _hover={{ transform: "scale(1.05)", cursor: "pointer" }}
             >
-              <Heading>USER:-{userInfo.name}</Heading>
-              <Heading as="h3" size="md">
+              <Wrap>
+                <WrapItem>
+                  <Avatar
+                    name={userInfo.name}
+                    w={"100px"}
+                    h={"100px"}
+                    bg={"palegreen"}
+                    mb={"10px"}
+                    color={"black"}
+                  />
+                </WrapItem>
+              </Wrap>
+              <Heading as="h3" size="md" color={"palevioletred"}>
                 TITLE:-{el.title}
               </Heading>
               <Text>BODY:-{el.body}</Text>
